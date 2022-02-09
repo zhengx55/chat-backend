@@ -9,13 +9,17 @@ const socket = require("socket.io");
 const Filter = require("bad-words");
 const ioServer = http.createServer(app);
 const io = socket(ioServer);
+const { generateMessage } = require("./utils/messages");
 
 // express statuc middlewares, use that for related front-end code
 app.use(express.static(publicDirectoryPath));
 
 io.on("connection", (socket) => {
   console.log("new connection established");
-  socket.broadcast.emit("message", "a new user has joined the chat room");
+  socket.broadcast.emit(
+    "message",
+    generateMessage("a new user has joined the chat room")
+  );
 
   socket.on("send_message", (message, callback) => {
     // Dirty lanauage filter
@@ -23,12 +27,12 @@ io.on("connection", (socket) => {
     if (filter.isProfane(message)) {
       return callback("bad-work is not allowed");
     }
-    io.emit("message", message);
+    io.emit("message", generateMessage(message));
     callback();
   });
 
   socket.on("disconnect", () => {
-    io.emit("message", "a user has left the chat room");
+    io.emit("message", generateMessage("a user has left the chat room"));
   });
 });
 
